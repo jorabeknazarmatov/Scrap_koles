@@ -57,7 +57,7 @@ class Parse:
             last = self._get_last_page(pagination_selector=pagination_selector)
             logger.info(f"{link} обнаружено {last} страниц")
             
-            for page in range(1, 1 + 1):                
+            for page in range(1, last + 1):                
                 next_url = f"{link}?page={page}"
                 self.page.goto(next_url, wait_until="networkidle")
                 cards = self.page.query_selector_all(".product-card__link")
