@@ -3,7 +3,7 @@ from typing import List, Optional
 import os, time
 from conf import links
 from log import logger
-from db import crud, engine
+# from db import crud, engine
 import models, re, json
 
 
@@ -106,7 +106,8 @@ class Parse:
                 for i, k in enumerate(key):
                     temp_json[k.text_content().split(":")[0].strip()] = value[i].inner_text().strip()
                 
-                characteristic = json.dumps(temp_json, ensure_ascii=False, indent=2)
+                # characteristic = json.dumps(temp_json, ensure_ascii=False, indent=2)
+                characteristic = temp_json
                 logger.info(f"Характеристика: {json.dumps(temp_json, ensure_ascii=False, indent=2)}")
                 
                 # Забираем наличие продукта
@@ -149,25 +150,56 @@ class Parse:
                                 "years": years,
                             })
                     
-                    suitabel_car = json.dumps(result, ensure_ascii=False, indent=2)
+                    # suitabel_car = json.dumps(result, ensure_ascii=False, indent=2)
+                    suitabel_car = result
                     logger.info(f"Спарсино {len(cars_table)} авто")
                 else:
                     suitabel_car = None
                 
-                if crud.find_product(code=code):
-                    continue
-                else:                    
-                    crud.add_product_with_info(
-                        name=title,
-                        image_url = image,
-                        code=code,
-                        price=price,
-                        count=count,
-                        characteristic=characteristic,
-                        description=description,
-                        suitable_car=suitabel_car
-                    )
+                # if crud.find_product(code=code):
+                #     continue
+                # else:                    
+                #     crud.add_product_with_info(
+                #         name=title,
+                #         image_url = image,
+                #         code=code,
+                #         price=price,
+                #         count=count,
+                #         characteristic=characteristic,
+                #         description=description,
+                #         suitable_car=suitabel_car
+                #     )
                 
+                res = {
+                    'name': title,
+                    'image_url': image,
+                    'code': code,
+                    'price': price,
+                    'count': count,
+                    'characteristic': characteristic,
+                    'description': description,
+                    'suitable_car': suitabel_car
+                }
+
+                file_path = "data.json"
+
+                # Если файл пустой или не существует, создаём список
+                if not os.path.exists(file_path) or os.stat(file_path).st_size == 0:
+                    data = []
+                else:
+                    with open(file_path, "r", encoding="utf-8") as file:
+                        try:
+                            data = json.load(file)
+                        except json.JSONDecodeError:
+                            data = []  # если файл повреждён или пустой
+
+                # Добавляем новый объект
+                data.append(res)
+
+                # Перезаписываем уже обновлённый список
+                with open(file_path, "w", encoding="utf-8") as file:
+                    json.dump(data, file, ensure_ascii=False, indent=2)
+
                 logger.info(f"Success: {index}-product")
                 
                 
@@ -197,7 +229,7 @@ class Parse:
 
 
 if __name__ == "__main__":
-    models.Base.metadata.create_all(engine)
+    # models.Base.metadata.create_all(engine)
     parser = Parse(links=links, headless=True)
     try:
         parser.page_r(pagination_selector=".pagination-page")
